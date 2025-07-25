@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNet.SignalR;
-using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,6 +28,15 @@ namespace websocket.Hubs
       return _userConnections.Keys.ToList();
     }
 
+    public void ForceLogout()
+    {
+      var username = Context.QueryString["username"];
+      if (!string.IsNullOrEmpty(username))
+      {
+        _logoutService.LogoutUser(username);
+      }
+    }
+
     public override Task OnDisconnected(bool stopCalled)
     {
       var username = Context.QueryString["username"];
@@ -47,8 +55,7 @@ namespace websocket.Hubs
 
           if (!_userConnections.TryGetValue(username, out int finalCount) || finalCount <= 0)
           {
-            _userConnections.TryRemove(username, out _);
-            _logoutService.LogoutUser(username);
+            ForceLogout();
           }
         });
       }

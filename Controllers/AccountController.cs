@@ -1,4 +1,8 @@
-﻿using System.Web.Mvc;
+﻿using System.Collections.Generic;
+using System.Configuration;
+using System.Linq;
+using System.Web.Mvc;
+using websocket.Models;
 using websocket.Services;
 
 namespace websocket.Controllers
@@ -20,12 +24,21 @@ namespace websocket.Controllers
       return View();
     }
 
+    List<User> users = new List<User>
+    {
+      new User { Username = "admin", Password = "123" },
+      new User { Username = "user", Password = "123" }
+    };
+
     [HttpPost]
     public ActionResult Login(string username, string password)
     {
-      if (username == "admin" && password == "123")
+      bool exists = users.Any(u => u.Username == username && u.Password == password);
+
+      if (exists)
       {
         Session["User"] = username;
+        (_logoutService as LogoutService)?.SetLoggedIn(username);
         return RedirectToAction("Index", "Home");
       }
 
@@ -40,7 +53,6 @@ namespace websocket.Controllers
       {
         _logoutService.LogoutUser(username);
       }
-
       Session.Clear();
       return RedirectToAction("Login");
     }

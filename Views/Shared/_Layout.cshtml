@@ -40,3 +40,29 @@
 
 <script src="~/Scripts/jquery.signalR-2.4.3.min.js"></script>
 <script src="/signalr/hubs"></script>
+<script>
+  $(function () {
+    const hub = $.connection && $.connection.userHub ? $.connection.userHub : null;
+
+    let inactivityTimeout;
+    const INACTIVITY_LIMIT = 30 * 1000; // 30 segundos
+
+    function resetInactivityTimer() {
+      clearTimeout(inactivityTimeout);
+      inactivityTimeout = setTimeout(function () {
+        if (hub && hub.server && hub.server.forceLogout) {
+          hub.server.forceLogout();
+        }
+      }, INACTIVITY_LIMIT);
+    }
+
+    $(document).on('mousemove keydown click scroll', resetInactivityTimer);
+    resetInactivityTimer();
+
+    if (hub && hub.client) {
+      hub.client.forceLogout = function () {
+        window.location.href = '@Url.Action("Login", "Account")';
+      };
+    }
+  });
+</script>
