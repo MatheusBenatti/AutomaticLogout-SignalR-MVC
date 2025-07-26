@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNet.SignalR;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,14 +11,15 @@ namespace websocket.Hubs
   public class UserHub : Hub
   {
     private static ConcurrentDictionary<string, int> _userConnections = new ConcurrentDictionary<string, int>();
-    private readonly ILogoutService _logoutService = new LogoutService();
+    private static readonly Lazy<ILogoutService> _logoutService = new Lazy<ILogoutService>(() => new LogoutService());
 
     public override Task OnConnected()
     {
       var username = Context.QueryString["username"];
       if (!string.IsNullOrEmpty(username))
       {
-        _userConnections.AddOrUpdate(username, 1, (key, old) => old + 1);
+        _userConnections.AddOrUpdate(username, 1, (key, count) => count + 1);
+        Console.WriteLine($"[Connected] Usuário: {username}. Conexões ativas: {_userConnections[username]}");
       }
 
       return base.OnConnected();
@@ -28,38 +30,29 @@ namespace websocket.Hubs
       return _userConnections.Keys.ToList();
     }
 
-    public void ForceLogout()
+    public override Task OnDisconnected(bool stopCalled)
     {
       var username = Context.QueryString["username"];
       if (!string.IsNullOrEmpty(username))
       {
-        _logoutService.LogoutUser(username);
-      }
-    }
+        _userConnections.AddOrUpdate(username, 0, (key, count) => count - 1);
 
-    public override Task OnDisconnected(bool stopCalled)
-    {
-      var username = Context.QueryString["username"];
-      if (!string.IsNullOrEmpty(username) && _userConnections.ContainsKey(username))
-      {
-        _userConnections.AddOrUpdate(username, 0, (key, old) => old - 1);
-
-        if (_userConnections[username] <= 0)
+        if (_userConnections.TryGetValue(username, out int connectionCount) && connectionCount <= 0)
         {
-          _userConnections.TryRemove(username, out _);
-        }
-
-        _ = Task.Run(async () =>
-        {
-          await Task.Delay(5000); // tempo para reconexão (refresh)
-
-          if (!_userConnections.TryGetValue(username, out int finalCount) || finalCount <= 0)
+          Task.Run(async () =>
           {
-            ForceLogout();
-          }
-        });
-      }
+            await Task.Delay(5000); // 5 segundos de tolerância
 
+            if (_userConnections.TryGetValue(username, out int finalCount) && finalCount <= 0)
+            {
+              _userConnections.TryRemove(username, out _);
+              Console.WriteLine($"[Desconectado] Última aba fechada para {username}. Deslogando...");
+
+              _logoutService.Value.LogoutUser(username);
+            }
+          });
+        }
+      }
       return base.OnDisconnected(stopCalled);
     }
   }

@@ -54,7 +54,7 @@
     $.connection.hub.qs = { username: '@(user ?? "")' };
 
     $.connection.hub.start().done(() => {
-      console.log('Conectado ao SignalR');
+      console.log('Conectado ao SignalR com usuario:' + '@user');
 
       hub.server.getActiveConnections().done(users => {
         console.log('Usuários conectados:', users);
@@ -64,6 +64,6 @@
     window.addEventListener('beforeunload', function () {
       $.connection.hub.stop();
     });
-  }); 
+  });
   </script>
 }
