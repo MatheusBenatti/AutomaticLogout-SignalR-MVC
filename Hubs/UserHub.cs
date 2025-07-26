@@ -30,6 +30,16 @@ namespace websocket.Hubs
       return _userConnections.Keys.ToList();
     }
 
+    //usado somente para logout por tempo de inatividade
+    public void ForceLogout()
+    {
+      var username = Context.QueryString["username"];
+      if (!string.IsNullOrEmpty(username))
+      {
+        _logoutService.Value.LogoutUser(username);
+      }
+    }
+
     public override Task OnDisconnected(bool stopCalled)
     {
       var username = Context.QueryString["username"];
