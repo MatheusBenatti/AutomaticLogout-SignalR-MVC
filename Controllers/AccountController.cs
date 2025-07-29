@@ -62,10 +62,6 @@ namespace websocket.Controllers
 
           authManager.SignIn(new AuthenticationProperties { IsPersistent = false }, identity);
 
-          //passando para infos para o hub
-          TempData["access_token"] = result.Access_token;
-          TempData["username"] = username;
-
           return RedirectToAction("Index", "Home");
         }
 

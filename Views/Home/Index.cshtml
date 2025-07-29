@@ -28,15 +28,14 @@
   </div>
 </main>
 
-
 @{
   ViewBag.Title = "Home";
-  var user = Session["User"] as string;
-  var token = TempData["access_token"] as string;
-  var username = TempData["username"] as string;
+  // Acessa as variáveis do ViewBag preenchidas na Controller
+  var username = ViewBag.Username as string;
+  var token = ViewBag.AccessToken as string;
 }
 
-<h2>Bem-vindo, @user</h2>
+<h2>Bem-vindo,@username</h2>
 <a href="@Url.Action("Logout", "Account", new { accessToken = token })">Sair</a>
 
 
@@ -48,19 +47,12 @@
       return;
     }
 
-    const token = '@token';
-    const username = '@username';
-
-    if (token && username) {
-      localStorage.setItem("access_token", token);
-      localStorage.setItem("username", username);
-    }
+    const token = '@Html.Raw(token)';
+    const username = '@Html.Raw(username)';
 
     const hub = $.connection.userHub;
-    const accessToken = localStorage.getItem("access_token");
-    const userName = localStorage.getItem("username");
 
-    $.connection.hub.qs = { username: userName, access_token: accessToken }
+    $.connection.hub.qs = { username: username, access_token: token }
 
     $.connection.hub.start().done(() => {
       console.log('Conectado ao SignalR com usuario:' + username);

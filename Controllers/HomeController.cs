@@ -1,4 +1,5 @@
-﻿using System.Web.Mvc;
+﻿using System.Security.Claims;
+using System.Web.Mvc;
 using websocket.Models;
 
 namespace websocket.Controllers
@@ -9,9 +10,11 @@ namespace websocket.Controllers
     [Authorize]
     public ActionResult Index()
     {
-      //aplicando validacao por token enquando nao implemento redis
-      var username = User.Identity.Name;
-      var token = TempData["access_token"]?.ToString();
+      var claimsIdentity = (ClaimsIdentity)User.Identity;
+      var username = claimsIdentity.FindFirst(ClaimTypes.Name)?.Value;
+      var token = claimsIdentity.FindFirst("access_token").Value;
+      ViewBag.Username = username;
+      ViewBag.AccessToken = token;
 
       if (string.IsNullOrEmpty(token) || !TokenStore.IsTokenValid(token))
       {
