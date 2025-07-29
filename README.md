@@ -1,30 +1,26 @@
-# Controle de Sessões com SignalR no ASP.NET MVC
+Controle de Sessões com SignalR no ASP.NET MVC
 
-Este é um projeto de demonstração utilizando as seguintes tecnologias:
+🎯 Objetivo
+Este projeto é uma demonstração de como controlar sessões de usuário com SignalR em uma aplicação ASP.NET MVC, focando na funcionalidade de logout automático quando todas as abas do navegador de um usuário são fechadas.
 
-- **.NET Framework 4.8**
-- **ASP.NET MVC 5**
-- **SignalR Clássico** (`Microsoft.AspNet.SignalR`)
-- **Session e Cookies** para controle de login do usuário
+🚀 Tecnologias Utilizadas
+Framework: .NET Framework 4.8
+Framework MVC: ASP.NET MVC 5
+WebSockets: SignalR Classic (Microsoft.AspNet.SignalR)
+Autenticação: OAuth (para o processo de autenticação) e Cookies (para gerenciar a sessão autenticada)
+Gerenciamento de Estado: Sessões (para controle de login do usuário)
+Frontend: JavaScript (para interação com SignalR)
 
-## Objetivo
+💡 Como Funciona
+Registro de Abas Ativas: Cada aba ativa do navegador de um usuário é registrada via SignalR.
+Desconexão por Fechamento de Aba: Ao fechar uma aba, a conexão SignalR correspondente é automaticamente terminada.
+Logout Automático: Se todas as abas do navegador de um usuário forem fechadas (ou seja, a última aba ativa é desconectada), o sistema realiza o logout automático do usuário.
+Controle de Conexões: O processo de logout é gerenciado pela contagem do número de conexões SignalR ativas por usuário.
 
-Testar a funcionalidade de logout automático de um usuário quando **todas as abas do navegador forem fechadas**.
-
-## Funcionalidades
-
-- Cada aba ativa de um usuário é registrada via SignalR.
-- Quando uma aba é fechada, a conexão SignalR é encerrada.
-- Se nenhuma aba estiver mais aberta (última aba fechada), o sistema realiza o logout automático do usuário.
-- O controle é feito via contagem de conexões por usuário.
-
-## Como funciona
-
-- O `Hub` do SignalR identifica o usuário por meio de `QueryString`.
-- Utiliza um dicionário compartilhado para contar conexões abertas por usuário.
-- No evento `OnDisconnected`, verifica se o número de abas abertas caiu para 0.
-- Se sim, chama o serviço de logout (Session/Cookies são limpos).
-
-## Observação
-
-Durante um **refresh (F5)** da aba, o SignalR desconecta e reconecta rapidamente. Por isso, foi colocado um pequeno tempo de tolerância para teste
+📖 Uso
+Após executar o projeto, a aplicação será aberta no seu navegador padrão.
+Faça Login: O projeto possui uma tela de login simples para simular um usuário autenticado.
+Abra Múltiplas Abas: Abra o mesmo endereço da aplicação em várias abas ou janelas do navegador.
+Teste o Logout:
+Feche uma aba por vez e observe que o usuário permanece logado enquanto houver outras abas abertas.
+Feche a última aba aberta e observe que o sistema deve deslogar o usuário automaticamente.
