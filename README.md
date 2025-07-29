@@ -1,12 +1,12 @@
 ## Controle de Sessões com SignalR no ASP.NET MVC
 
 
-###🎯 Objetivo
+### 🎯 Objetivo
 
 Este projeto é uma demonstração de como controlar sessões de usuário com SignalR em uma aplicação ASP.NET MVC, focando na funcionalidade de logout automático quando todas as abas do navegador de um usuário são fechadas.
 
 
-###🚀 Tecnologias Utilizadas
+### 🚀 Tecnologias Utilizadas
 
 Framework: .NET Framework 4.8
 
@@ -21,7 +21,7 @@ Gerenciamento de Estado: Sessões (para controle de login do usuário)
 Frontend: JavaScript (para interação com SignalR)
 
 
-###💡 Como Funciona
+### 💡 Como Funciona
 
 Registro de Abas Ativas: Cada aba ativa do navegador de um usuário é registrada via SignalR.
 
@@ -32,7 +32,7 @@ Logout Automático: Se todas as abas do navegador de um usuário forem fechadas 
 Controle de Conexões: O processo de logout é gerenciado pela contagem do número de conexões SignalR ativas por usuário.
 
 
-###📖 Uso
+### 📖 Uso
 
 Após executar o projeto, a aplicação será aberta no seu navegador padrão.
 
