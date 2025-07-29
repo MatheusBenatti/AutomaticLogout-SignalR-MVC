@@ -41,27 +41,31 @@
 <script src="~/Scripts/jquery.signalR-2.4.3.min.js"></script>
 <script src="/signalr/hubs"></script>
 <script>
+
+  let inactivityTimeout;
+  const INACTIVITY_LIMIT = 30 * 60 * 1000; // 30 minutos
+
+  function forceLogoutAndRedirect() {
+    const hub = $.connection && $.connection.userHub ? $.connection.userHub : null;
+      if (hub && hub.server && hub.server.forceLogout) {
+        hub.server.forceLogout()
+          .done(() => {
+            window.location.href = '@Url.Action("Login", "Account")';
+          });
+      }
+  }
+
+  function resetInactivityTimer() {
+    clearTimeout(inactivityTimeout);
+    inactivityTimeout = setTimeout(forceLogoutAndRedirect, INACTIVITY_LIMIT);
+  }
+
+  $(document).on('mousemove keydown click scroll', resetInactivityTimer);
+  resetInactivityTimer();
+
+
   $(function () {
     const hub = $.connection && $.connection.userHub ? $.connection.userHub : null;
-
-    let inactivityTimeout;
-    const INACTIVITY_LIMIT = 30 * 1000; // 30 segundos
-
-    function forceLogoutAndRedirect() {
-      if (hub && hub.server && hub.server.forceLogout) {
-        hub.server.forceLogout();
-      }
-        window.location.href = '@Url.Action("Login", "Account")';
-    }
-
-    function resetInactivityTimer() {
-      clearTimeout(inactivityTimeout);
-      inactivityTimeout = setTimeout(forceLogoutAndRedirect, INACTIVITY_LIMIT);
-    }
-
-    $(document).on('mousemove keydown click scroll', resetInactivityTimer);
-    resetInactivityTimer();
-
     if (hub && hub.client) {
       hub.client.forceLogout = function () {
         window.location.href = '@Url.Action("Login", "Account")';

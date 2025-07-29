@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web;
 using websocket.Services;
 
 namespace websocket.Hubs
@@ -11,17 +12,16 @@ namespace websocket.Hubs
   public class UserHub : Hub
   {
     private static ConcurrentDictionary<string, int> _userConnections = new ConcurrentDictionary<string, int>();
-    private static readonly Lazy<ILogoutService> _logoutService = new Lazy<ILogoutService>(() => new LogoutService());
+    private static readonly Lazy<IAuthService> _authService = new Lazy<IAuthService>(() => new AuthService());
 
     public override Task OnConnected()
     {
       var username = Context.QueryString["username"];
-      if (!string.IsNullOrEmpty(username))
-      {
-        _userConnections.AddOrUpdate(username, 1, (key, count) => count + 1);
-        Console.WriteLine($"[Connected] Usuário: {username}. Conexões ativas: {_userConnections[username]}");
-      }
+      var token = Context.QueryString["access_token"];
 
+
+      _userConnections.AddOrUpdate(username, 1, (key, count) => count + 1);
+      Console.WriteLine($"[Connected] Usuário: {username}. Conexões ativas: {_userConnections[username]}");
       return base.OnConnected();
     }
 
@@ -31,39 +31,40 @@ namespace websocket.Hubs
     }
 
     //usado somente para logout por tempo de inatividade
-    public void ForceLogout()
+    public void ForceLogout(string username, string token, HttpContextBase httpContext)
     {
-      var username = Context.QueryString["username"];
-      if (!string.IsNullOrEmpty(username))
+      if (!string.IsNullOrEmpty(token))
       {
-        _logoutService.Value.LogoutUser(username);
+        _authService.Value.LogoutUser(username, token, false);
+        _authService.Value.CleanCookies(httpContext);
       }
     }
 
-    public override Task OnDisconnected(bool stopCalled)
+    public override async Task OnDisconnected(bool stopCalled)
     {
       var username = Context.QueryString["username"];
+      var token = Context.QueryString["access_token"];
+      var httpContext = Context.Request.GetHttpContext();
+
       if (!string.IsNullOrEmpty(username))
       {
-        _userConnections.AddOrUpdate(username, 0, (key, count) => count - 1);
+        _userConnections.AddOrUpdate(username, 0, (key, count) => Math.Max(count - 1, 0));
 
         if (_userConnections.TryGetValue(username, out int connectionCount) && connectionCount <= 0)
         {
-          Task.Run(async () =>
+          await Task.Delay(3000);  // 3 segundos de tolerância
+
+          _userConnections.TryGetValue(username, out int finalCount);
+
+          if (finalCount <= 0 && !_authService.Value.WasManualLogout(username))
           {
-            await Task.Delay(5000); // 5 segundos de tolerância
-
-            if (_userConnections.TryGetValue(username, out int finalCount) && finalCount <= 0)
-            {
-              _userConnections.TryRemove(username, out _);
-              Console.WriteLine($"[Desconectado] Última aba fechada para {username}. Deslogando...");
-
-              _logoutService.Value.LogoutUser(username);
-            }
-          });
+            _userConnections.TryRemove(username, out _);
+            ForceLogout(username, token, httpContext);
+          }
         }
+        ;
       }
-      return base.OnDisconnected(stopCalled);
+      await base.OnDisconnected(stopCalled);
     }
   }
 }

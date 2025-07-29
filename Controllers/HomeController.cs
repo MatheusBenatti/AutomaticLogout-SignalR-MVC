@@ -1,30 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.Web.Mvc;
-using websocket.Services;
+﻿using System.Web.Mvc;
+using websocket.Models;
 
 namespace websocket.Controllers
 {
+
   public class HomeController : Controller
   {
-    private readonly ILogoutService _logoutService;
-
-    public HomeController() : this(new LogoutService())
-    {
-    }
-
-    public HomeController(ILogoutService logoutService)
-    {
-      _logoutService = logoutService;
-    }
-
+    [Authorize]
     public ActionResult Index()
     {
-      var user = Session["User"] as string;
-      if (string.IsNullOrEmpty(user) || !_logoutService.IsLoggedIn(user))
+      //aplicando validacao por token enquando nao implemento redis
+      var username = User.Identity.Name;
+      var token = TempData["access_token"]?.ToString();
+
+      if (string.IsNullOrEmpty(token) || !TokenStore.IsTokenValid(token))
+      {
         return RedirectToAction("Login", "Account");
+      };
 
       return View();
     }

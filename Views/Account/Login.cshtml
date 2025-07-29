@@ -1,10 +1,16 @@
 @{
-    Layout = null;
+  Layout = null;
 }
+
 <h2>Login</h2>
-<form method="post">
-    <input name="username" placeholder="Usuário" />
-    <input name="password" type="password" placeholder="Senha" />
-    <button type="submit">Entrar</button>
-</form>
-<p style="color:red">@ViewBag.Error</p>
+
+@using (Html.BeginForm("Login", "Account", FormMethod.Post))
+{
+  <input type="text" name="username" placeholder="Usuário" autocomplete="username" />
+  <input type="password" name="password" placeholder="Senha" autocomplete="current-password" />
+  <button type="submit">Login</button>
+}
+<p id="errorMsg" style="color:red"></p>
+
+@Scripts.Render("~/bundles/jquery")
+

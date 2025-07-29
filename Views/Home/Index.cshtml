@@ -1,8 +1,4 @@
-﻿@{
-  ViewBag.Title = "Home Page";
-}
-
-<main>
+﻿<main>
   <section class="row" aria-labelledby="aspnetTitle">
     <h1 id="title">ASP.NET</h1>
     <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
@@ -36,10 +32,12 @@
 @{
   ViewBag.Title = "Home";
   var user = Session["User"] as string;
+  var token = TempData["access_token"] as string;
+  var username = TempData["username"] as string;
 }
 
 <h2>Bem-vindo, @user</h2>
-<a href="@Url.Action("Logout", "Account")">Sair</a>
+<a href="@Url.Action("Logout", "Account", new { accessToken = token })">Sair</a>
 
 
 @section scripts {
@@ -49,16 +47,28 @@
       console.error('SignalR hub script not loaded or hub not defined.');
       return;
     }
-    const hub = $.connection.userHub;
 
-    $.connection.hub.qs = { username: '@(user ?? "")' };
+    const token = '@token';
+    const username = '@username';
+
+    if (token && username) {
+      localStorage.setItem("access_token", token);
+      localStorage.setItem("username", username);
+    }
+
+    const hub = $.connection.userHub;
+    const accessToken = localStorage.getItem("access_token");
+    const userName = localStorage.getItem("username");
+
+    $.connection.hub.qs = { username: userName, access_token: accessToken }
 
     $.connection.hub.start().done(() => {
-      console.log('Conectado ao SignalR com usuario:' + '@user');
-
-      hub.server.getActiveConnections().done(users => {
-        console.log('Usuários conectados:', users);
-      });
+      console.log('Conectado ao SignalR com usuario:' + username);
+        hub.server.getActiveConnections().done(users => {
+          console.log('Usuários conectados:', users);
+        });
+    }).fail(err => {
+      console.error('Erro ao conectar SignalR:', err);
     });
 
     window.addEventListener('beforeunload', function () {
